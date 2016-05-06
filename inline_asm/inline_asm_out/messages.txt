@@ -1,2 +1,0 @@
-KLEE: ERROR: /home/dungnguyen/angelix/src/klee/examples/inline_asm/inline_asm.c:3: inline assembly is unsupported
-KLEE: NOTE: now ignoring this error at this location

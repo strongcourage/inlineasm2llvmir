@@ -1,6 +1,0 @@
-Error: inline assembly is unsupported
-File: /home/dungnguyen/angelix/src/klee/examples/inline_asm/inline_asm_klee.c
-Line: 7
-assembly.ll line: 37
-Stack: 
-	#000000037 in main () at /home/dungnguyen/angelix/src/klee/examples/inline_asm/inline_asm_klee.c:7
