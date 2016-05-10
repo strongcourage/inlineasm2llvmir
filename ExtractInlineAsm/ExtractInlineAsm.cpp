@@ -14,6 +14,7 @@
 
 #define DEBUG_TYPE "ExtractInlineAsm"
 #include "llvm/Pass.h"
+#include "llvm/IR/Value.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
@@ -35,125 +36,87 @@ namespace {
 
         virtual bool runOnModule(Module &mod) {
             LLVMContext& m_context = getGlobalContext();
-            
-            FunctionType *functype_sum = FunctionType::get(IntegerType::get(m_context, 64), std::vector<llvm::Type*>(6, IntegerType::get(m_context, 64)), false); 
-            Function *func_sum = Function::Create(functype_sum, Function::PrivateLinkage, "manh_dung", &mod);
-            BasicBlock *basicBlock = BasicBlock::Create(m_context, "entry", func_sum);
-            IRBuilder<> builder(basicBlock);
-            builder.SetInsertPoint(basicBlock);
-            // AllocaInst* ptr_input_addr = new AllocaInst(IntegerType::get(m_context, 32), "retVal", basicBlock);
-            // ptr_input_addr->setAlignment(4);
-            // StoreInst* void_15 = new StoreInst(int32_input, ptr_input_addr, false, basicBlock);
-            // void_15->setAlignment(4);
-            // LoadInst* int32_16 = new LoadInst(ptr_input_addr, "", false, basicBlock);
-            // int32_16->setAlignment(4);
-            // Value *two = ConstantInt::get(Type::getInt32Ty(m_context), 2);
-            // Value *three = ConstantInt::get(Type::getInt32Ty(m_context), 3);
-            // Instruction *add = BinaryOperator::Create(Instruction::Add, two, three, "retVal");
-            // basicBlock->getInstList().push_back(add);
-            // basicBlock->getInstList().push_back(mod.getFunction("main")->begin()->getTerminator());
-            // ReturnInst::Create(m_context, BasicBlock);
-            builder.CreateRet(ConstantInt::get(IntegerType::get(m_context, 64), 0));
-            // basicBlock->getInstList().push_back(ret);
 
-            Function *func_main = mod.getFunction("main");
-            // errs() << "func_main: " << *func_main << "\n";
-            // errs() << "func_sum: " << *func_sum << "\n";
-            // for(Module::iterator func_main = mod.begin(), fe = mod.end(); func_main != fe; ++func_main) {
-                // for(Function::iterator bb = func_main->begin(), be = func_main->end(); bb != be; ++bb) {
-                //     // bb->getInstList().pop_back();
-                //     Value *two = ConstantInt::get(Type::getInt32Ty(m_context), 2);
-                //     Value *three = ConstantInt::get(Type::getInt32Ty(m_context), 3);
-                //     Instruction *add = BinaryOperator::Create(Instruction::Add, two, three, "retval");
-                //     bb->getInstList().insert(bb->getTerminator(), add);
-                //     errs() << "bb: " << *bb << "\n";
-                //     for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
-                //         errs() << "instruction: " << *i << "\n";
-                //     }
-                // }
-            // }
-            // vector<Instruction*> listInst;
-            // for(Function::iterator bb = func_main->begin(), be = func_main->end(); bb != be; ++bb) {
-            //     for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
-            //         listInst.push_back(*i);
-            //     }
-            // }
+            // iterate all functions, all basic blocks and all instructions to detect inline assembly instruction
+            for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
+                for(Function::iterator bb = fi->begin(), be = fi->end(); bb != be; ++bb) {
+                    Value *param = nullptr;
+                    CallInst *ci_asm = nullptr;
+                    for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
+                        // is a call instruction ?
+                        if (isa<CallInst>(i)) {
+                            ci_asm = dyn_cast<CallInst>(i);
+                            // is a inline asm instruction ?
+                            if (ci_asm->isInlineAsm()){
+                                errs() << "inline asm function: " << *ci_asm << "\n";
 
-            for(Function::iterator bb = func_main->begin(), be = func_main->end(); bb != be; ++bb) {
-                TerminatorInst *terminator_inst = bb->getTerminator();
-                errs() << "terminator_inst:" << *terminator_inst << "\n";
-                Value *param1 = nullptr;
-                Value *param2 = nullptr;
-                // Value *param3 = nullptr;
-                // Value *param4 = nullptr;
-                // Value *param5 = nullptr;
-                // Value *param6 = nullptr;
-                CallInst *ci_asm = nullptr;
-                for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
-                    // if (isa<AllocaInst>(i) && i->getName() == "ret") {
-                    //     i->eraseFromParent();
-                    // }
-                    if (isa<CallInst>(i)) {
-                        ci_asm = dyn_cast<CallInst>(i);
-                        if (ci_asm->isInlineAsm()){
-                            errs() << "inline asm function: " << *ci_asm << "\n";
-                            errs() << "getNumArgOperands: " << ci_asm->getNumArgOperands() << "\n";
-                            param1 = ci_asm->getArgOperand(0);
-                            errs() << "param1: " << *param1 << "\n";
-                            param2 = ci_asm->getArgOperand(1);
-                            errs() << "param2: " << *param2 << "\n";
-                            Value *calledValue = ci_asm->getCalledValue();
-                            errs() << "calledValue: " << *calledValue << "\n";
-                            InlineAsm *iasm = dyn_cast<InlineAsm>(calledValue);
-
-                            errs() << "getAsmString : " << iasm->getAsmString() << "\n";
-                            errs() << "hasSideEffects : " << iasm->hasSideEffects() << "\n";
-                            errs() << "getConstraintString : " << iasm->getConstraintString() << "\n";
-
-                            InlineAsm::ConstraintInfoVector constraintInfo = iasm->ParseConstraints();
-                            for(vector<InlineAsm::ConstraintInfo>::iterator vi = constraintInfo.begin(); vi != constraintInfo.end(); ++vi) {
-                                // ConstraintPrefix: isInput: 0, isOutput: 1, isClobber: 2
-                                errs() << "Type: " << vi->Type << "\n";
-                                // errs() << "MatchingInput: " << vi->MatchingInput << "\n";
-                                InlineAsm::ConstraintCodeVector codes = vi->Codes;
-                                for(vector<string>::iterator vicode = codes.begin(); vicode != codes.end(); ++vicode) {
-                                    errs() << "Codes: " << *vicode << "\n";
+                                int numArgs = ci_asm->getNumArgOperands();
+                                errs() << "getNumArgOperands: " << numArgs << "\n";
+                                for (int i=0; i<numArgs; ++i) {
+                                    param = ci_asm->getArgOperand(i);
+                                    errs() << "param " << i << " : " << *param << "\n";
                                 }
+
+                                Value *calledValue = ci_asm->getCalledValue();
+                                errs() << "calledValue: " << *calledValue << "\n";
+                                errs() << "getType of calledValue: " << *calledValue->getType() << "\n";
+
+                                InlineAsm *iasm = dyn_cast<InlineAsm>(calledValue);
+                                errs() << "getAsmString : " << iasm->getAsmString() << "\n";
+                                errs() << "hasSideEffects : " << iasm->hasSideEffects() << "\n";
+                                errs() << "getConstraintString : " << iasm->getConstraintString() << "\n";
+
+                                InlineAsm::ConstraintInfoVector constraintInfo = iasm->ParseConstraints();
+                                for(vector<InlineAsm::ConstraintInfo>::iterator vi = constraintInfo.begin(); vi != constraintInfo.end(); ++vi) {
+                                    // ConstraintPrefix: isInput: 0, isOutput: 1, isClobber: 2
+                                    errs() << "Type: " << vi->Type << "\n";
+                                    // errs() << "MatchingInput: " << vi->MatchingInput << "\n";
+                                    InlineAsm::ConstraintCodeVector codes = vi->Codes;
+                                    for(vector<string>::iterator vicode = codes.begin(); vicode != codes.end(); ++vicode) {
+                                        errs() << "Codes: " << *vicode << "\n";
+                                    }
+                                }
+
+                                // for each inline asm function, create a new corresponding function which has same signature
+                                vector<Type*> lifted_type_params;
+                                vector<Value*> lifted_params;
+                                for (int i=0; i<numArgs; ++i) {
+                                    lifted_params.push_back(ci_asm->getArgOperand(i));
+                                    lifted_type_params.push_back(ci_asm->getArgOperand(i)->getType());
+                                }
+
+                                // insert a lifted inline asm function, just a function declaration (extern)
+                                FunctionType *functype_declareCall = FunctionType::get(IntegerType::get(m_context, 64), lifted_type_params, false); 
+                                Function *func_declareCall = Function::Create(functype_declareCall, Function::ExternalLinkage, "lifted_inline_asm", &mod);
+
+                                // create a new module, which contains the definition of the lifted inline asm function
+                                Module* newMod = new Module("inline_asm", getGlobalContext());
+                                // TODO: replace IntegerType::get(m_context, 64) by Type* of return value of inline asm function
+                                FunctionType *functype_extractCall = FunctionType::get(IntegerType::get(m_context, 64), lifted_type_params, false); 
+                                Function *func_extractCall = Function::Create(functype_extractCall, Function::ExternalLinkage, "lifted_inline_asm", newMod);
+
+                                BasicBlock *basicBlock = BasicBlock::Create(m_context, "entry", func_extractCall);
+                                IRBuilder<> builder(basicBlock);
+                                builder.SetInsertPoint(basicBlock);
+                                builder.CreateRet(ConstantInt::get(IntegerType::get(m_context, 64), 0));
+
+                                errs() << "extracted function definition: " << *func_extractCall << "\n";
+                                errs() << "new module: " << *newMod << "\n";
+
+                                // in the origin module, replace the inline asm function by the lifted function, which takes the same input parameters 
+                                CallInst *replaceCall = CallInst::Create(func_declareCall, lifted_params, "a"); // if I remove "a", it will be <badref> = ... ???
+                                errs() << "replaced call:" << *replaceCall << "\n";
+                                IRBuilder<> bb_builder(bb);
+                                BasicBlock::iterator ii(ci_asm);
+                                ReplaceInstWithInst(bb->getInstList(), ii, replaceCall);
+                                errs() << "origin module: " << mod << "\n";
+                                // TODO: remove return
+                                return true;
                             }
                         }
                     }
-                }
 
-                // AllocaInst* alloca_param3 = new AllocaInst(IntegerType::get(m_context, 64), "param3");
-                // alloca_param3->setAlignment(8);  
-                std::vector<Value*> lifted_params;
-                lifted_params.push_back(param1);
-                lifted_params.push_back(param2);
-                lifted_params.push_back(param1);
-                lifted_params.push_back(param1);
-                lifted_params.push_back(param1);
-                lifted_params.push_back(param1);
-                // AllocaInst* alloca_retSum = new AllocaInst(IntegerType::get(m_context, 32), "retSum", bb);
-                // alloca_retSum->setAlignment(4);   
-                // errs() << "alloca_retSum:" << *alloca_retSum << "\n"; 
-                // LoadInst* load_retSum = new LoadInst(alloca_retSum, "", false, bb);
-                // load_retSum->setAlignment(4);
-                // errs() << "load_retSum:" << *load_retSum << "\n"; 
-                CallInst *newCall = CallInst::Create(func_sum, lifted_params, "aaa");
-                errs() << "new call:" << *newCall << "\n";
-                errs() << "name:" << ci_asm->getName() << "\n";
-                // StoreInst* store_retSum = new StoreInst(newCall, alloca_retSum, false, bb);
-                // store_retSum->setAlignment(4);
-                // errs() << "store_retSum:" << *store_retSum << "\n";
-                // // bb->getInstList().push_back(alloca_retSum);
-                // // bb->getInstList().push_back(load_retSum);
-                // // bb->getInstList().push_back(newCall);
-                // // bb->getInstList().push_back(store_retSum);
-                // IRBuilder<> bb_builder(bb);
-                // bb_builder.CreateRet(ConstantInt::get(IntegerType::get(m_context, 32), 0));
-                // bb->getInstList().push_back(terminator_inst);
-                BasicBlock::iterator ii(ci_asm);
-                ReplaceInstWithInst(bb->getInstList(), ii, newCall);
+                }
             }
             return true;
         }   
