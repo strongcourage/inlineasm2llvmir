@@ -29,62 +29,66 @@ using namespace llvm;
 using namespace std;
 
 namespace {
-    struct DoPostProcessing : public ModulePass {
-        static char ID; // Pass identification, replacement for typeid
-        DoPostProcessing() : ModulePass(ID) {}
 
-        virtual bool runOnModule(Module &mod) {
-            LLVMContext& m_context = getGlobalContext();
-            
-            FunctionType *functype_sum = FunctionType::get(IntegerType::get(m_context, 64), std::vector<llvm::Type*>(6, IntegerType::get(m_context, 64)), false); 
-            Function *func_sum = Function::Create(functype_sum, Function::PrivateLinkage, "manh_dung", &mod);
-            BasicBlock *basicBlock = BasicBlock::Create(m_context, "entry", func_sum);
-            IRBuilder<> builder(basicBlock);
-            builder.SetInsertPoint(basicBlock);
-            builder.CreateRet(ConstantInt::get(IntegerType::get(m_context, 64), 0));
+struct DoPostProcessing : public ModulePass {
+    static char ID; // Pass identification, replacement for typeid
+    DoPostProcessing() : ModulePass(ID) {}
 
-            Function *func_main = mod.getFunction("main");
-            Function *lift = nullptr;
-            for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
-                if (fi->getName().find("_x86_64_lifted_function") != std::string::npos) {
-                    errs() << "lifted_function: " << *fi << "\n";
-                    lift = fi;
-                }
+    virtual bool runOnModule(Module &mod) {
+        LLVMContext& m_context = getGlobalContext();
+        Function *lift = nullptr;
+        for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
+            if (fi->getName().find("_x86_64_lifted_function") != std::string::npos) {
+                errs() << "lifted_function: " << *fi << "\n";
+                lift = fi;
             }
+        }
 
-            // for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
-                for(Function::iterator bb = func_main->begin(), be = func_main->end(); bb != be; ++bb) {
-                    for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
-                        if (isa<CallInst>(i)) {
-                            errs() << "manh_dung: " << *i << "\n";
-                            CallInst *ci_asm = dyn_cast<CallInst>(i);
-                            std::vector<Value*> lifted_params;
-                            Value *param1 = ci_asm->getArgOperand(0);
-                            Value *param2 = ci_asm->getArgOperand(1);
-                            lifted_params.push_back(param1);
-                            lifted_params.push_back(param2);
-                            lifted_params.push_back(param1);
-                            lifted_params.push_back(param1);
-                            lifted_params.push_back(param1);
-                            lifted_params.push_back(param1);
-                            
-                            BasicBlock::iterator ii(ci_asm);
-                            errs() << "name: " << ci_asm->getName() << "\n";
-                            CallInst *newLiftedFunc = CallInst::Create(lift, lifted_params, "");
-                            errs() << "newLiftedFunc:" << *newLiftedFunc << "\n";
-                            ReplaceInstWithInst(bb->getInstList(), ii, newLiftedFunc);
-                            // Function *funcCall = dyn_cast<CallInst>(i)->getCalledFunction();
-                            // if (funcCall->getName().find("dung") != std::string::npos) {
-                            //     errs() << "manh_dung: " << *funcCall << "\n";
-                            // }
+        for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
+            for(Function::iterator bb = fi->begin(), be = fi->end(); bb != be; ++bb) {
+                for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
+                    if (isa<CallInst>(i)) {
+                        // errs() << "lifted_inline_asm function: " << *i << "\n";
+                        CallInst *ci = dyn_cast<CallInst>(i);
+                        Function *funcCall = dyn_cast<CallInst>(ci)->getCalledFunction();
+                        if (funcCall) {
+                            // errs() << "call function: " << funcCall->getName(); 
+                            if (funcCall->getName().find("lifted_inline_asm") != std::string::npos) {
+                                errs() << "Find @lifted_inline_asm: " << *ci << "\n";
+                                std::vector<Value*> lifted_params;
+                                Value *param0 = ci->getArgOperand(0);
+                                Value *param1 = ci->getArgOperand(1);
+                                Value *param2 = ci->getArgOperand(2);
+                                Value *param3 = ci->getArgOperand(3);
+                                Value *param4 = ci->getArgOperand(4);
+                                Value *param5 = ci->getArgOperand(5);
+                                lifted_params.push_back(param0);
+                                lifted_params.push_back(param1);
+                                lifted_params.push_back(param2);
+                                lifted_params.push_back(param3);
+                                lifted_params.push_back(param4);
+                                lifted_params.push_back(param5);
+                                
+                                BasicBlock::iterator ii(ci);
+                                errs() << "name: " << ci->getName() << "\n";
+                                CallInst *newLiftedFunc = CallInst::Create(lift, lifted_params, "zzz");
+                                errs() << "newLiftedFunc:" << *newLiftedFunc << "\n";
+                                ReplaceInstWithInst(bb->getInstList(), ii, newLiftedFunc);
+                                // Function *funcCall = dyn_cast<CallInst>(i)->getCalledFunction();
+                                // if (funcCall->getName().find("dung") != std::string::npos) {
+                                //     errs() << "manh_dung: " << *funcCall << "\n";
+                                // }
+                            }
                         }
                     }
                 }
-            // }
+            }
+        }
 
-            return true;
-        }   
-    };
+        return true;
+    }   
+};
+
 }
 
 char DoPostProcessing::ID = 0;
