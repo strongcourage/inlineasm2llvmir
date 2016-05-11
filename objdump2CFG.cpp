@@ -3,6 +3,9 @@
 #include <fstream>
 #include <map>
 #include <algorithm>    // std::remove_if
+#include <functional> 
+#include <cctype>
+#include <locale>
 
 using namespace std;
 
@@ -19,8 +22,25 @@ struct InfoInst {
     string keyInst;
     string addressInst;
     string opcodesInst;
-    string offsetInst;
+    pair <string, int> offsetInst;
 };
+
+// trim from start
+static inline string ltrim(string str) {
+    str.erase(str.begin(), find_if(str.begin(), str.end(), not1(ptr_fun<int, int>(isspace))));
+    return str;
+}
+
+// trim from end
+static inline string rtrim(string str) {
+    str.erase(find_if(str.rbegin(), str.rend(), std::not1(ptr_fun<int, int>(isspace))).base(), str.end());
+    return str;
+}
+
+// trim from both ends
+static inline string trim(string str) {
+    return ltrim(rtrim(str));
+}
 
 static void objdump2CFG(string fileName) {
     ifstream ifs(fileName);
@@ -29,8 +49,6 @@ static void objdump2CFG(string fileName) {
     string line;
     int keywordsSize = sizeof(keywordsInsts)/sizeof(string);
 
-    // map<string, string> symbols; // <address, opcodes>
-
     // open and read objdump input file
     if (ifs.is_open()) {
         while(getline(ifs, line)) {
@@ -38,41 +56,51 @@ static void objdump2CFG(string fileName) {
             string::size_type pos_keyword = string::npos;
             string::size_type pos_colon = string::npos;
             string::size_type pos_not_colon_opcodes = string::npos;
+            string keyword;
+            string address;
+            string next_func;
+            string att_insts;
+            int offset = 0;
 
             for (int i=0; i<line.size(); i++) {
                 if (line.at(i) == ':') {
-                    cout << "pos_colon: " << i << endl;
+                    // cout << "pos_colon: " << i << endl;
                     pos_colon = i;
-                    string address = line.substr(0, pos_colon);
-
-                    // erase spaces of address
-                    string::iterator end_pos_address = remove(address.begin(), address.end(), ' ');
-                    address.erase(end_pos_address, address.end());
-                    // cout << "address:" << address << endl;
-
+                    address = trim(line.substr(0, pos_colon));
                 }
             }
 
             for (int i=0; i<keywordsSize; i++) {
                 pos_keyword = line.find(keywordsInsts[i]);
+                // cout << "pos_keyword: " << pos_keyword << endl;
+                // cout << "line size: " << line.size() << endl;
+                keyword = keywordsInsts[i];
+                
+                
                 if (pos_keyword != string::npos && pos_colon != string::npos) {
-                    string extract_line = "ins" + line;
-                    extract_line = line.substr(0, pos_keyword-1); // line.resize(pos_keyword);
-                    ofs << "extract_line: " << extract_line << endl;
+                    string extract_line = "ins " + trim(line.substr(0, pos_keyword-1)); // line.resize(pos_keyword);
+                    cout << "extract_line: " << extract_line << endl;
+                    ofs << extract_line << endl;
 
-                    string opcodes = extract_line.substr(pos_colon+1, pos_keyword);
-                    // find the first position of opcodes that is not a space
-                    for (int j=0; j<opcodes.size(); j++) {
-                        if (line.at(j) != ' ') {
-                            pos_not_colon_opcodes = j;
-                            cout << "pos_not_colon_opcodes: " << pos_not_colon_opcodes << endl;
-                            break;
-                        }
+                    string opcodes = trim(extract_line.substr(pos_colon+1, pos_keyword));
+                    cout << "opcodes: " << opcodes << endl;
+
+                    att_insts = trim(line.substr(pos_keyword+keyword.size()+1, line.size()).c_str());
+                    cout << "att_insts: " << att_insts << endl;
+
+                    // unconditional branch
+                    if (keyword == "jmpq" || keyword == "jle") {
+
                     }
-                    if (pos_not_colon_opcodes != string::npos) {
-                        opcodes = opcodes.substr(pos_not_colon_opcodes-1, opcodes.size());
-                        cout << "opcodes: " << opcodes << endl;
-                    }
+
+                    // conditional branch
+
+                    // update struct InfoInst of each instruction
+                    InfoInst current_inst = { keyword, address, opcodes, make_pair("", 0)}; 
+                    cout << "instruction: ";
+                    cout << current_inst.keyInst << " " << current_inst.addressInst << " " << current_inst.opcodesInst 
+                        << " " <<  current_inst.offsetInst.first << " " << current_inst.offsetInst.second << endl;
+
                 }
             }
         }
