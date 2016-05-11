@@ -1,0 +1,11 @@
+ins   0:	55                 
+ins   1:	48 89 e5           
+ins   4:	48 01 f7           
+ins   7:	48 89 f8           
+ins   a:	48 89 f0           
+ins   d:	4c 89 45 f8        
+ins  11:	48 89 4d f0        
+ins  15:	48 89 55 e8        
+ins  19:	4c 89 4d e0        
+ins  1d:	5d                 
+ins  1e:	c3                 
