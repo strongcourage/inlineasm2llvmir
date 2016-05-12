@@ -66,29 +66,33 @@ static void objdump2CFG(string fileName) {
 
     map<string, vector<InfoInst> > mapFuncInst; // <function_name, list_of_instructions_of_function>
     vector<InfoInst> vectorInst;
+    vector<string> vectorBranches;
 
     // open and read objdump input file
     if (ifs.is_open()) {
         while(getline(ifs, line)) {
             string::size_type pos_keyword = string::npos;
             string keyword, address, opcodes, next_func, att_insts, offset;
-            string insert_line;
+            string insert_line, blk_line = "";
 
             int pos_colon = first_position(line, ':');
             if (pos_colon >= 0) {
-                // cout << "pos_colon: " << pos_colon << endl;
                 address = trim(line.substr(0, pos_colon));
+
+                // if address in vectorBranches, create a new basic block
+                vector<string>::iterator vec_it = find (vectorBranches.begin(), vectorBranches.end(), address);
+                if (vec_it != vectorBranches.end()) {
+                    blk_line = "blk " + address + ":\n";
+                }
             }
 
             for (int i=0; i<keywordsSize; i++) {
                 pos_keyword = line.find(keywordsInsts[i]);
-                // cout << "pos_keyword: " << pos_keyword << endl;
                 keyword = keywordsInsts[i];
                 
                 
                 if (pos_keyword != string::npos && pos_colon != string::npos) {
                     insert_line = "ins " + trim(line.substr(0, pos_keyword-1)); // line.resize(pos_keyword);
-                    ofs << insert_line << endl;
 
                     opcodes = trim(insert_line.substr(pos_colon+3, pos_keyword-pos_colon-3));
                     // cout << "opcodes: " << opcodes << endl;
@@ -106,14 +110,13 @@ static void objdump2CFG(string fileName) {
                         if (pos_1 >= 0 && pos_2 >= 0) {
                             next_func = att_insts.substr(pos_1+1, pos_2-pos_1-1);
                             current_inst.offsetInst.first = next_func;
-                            // cout << "next_func: " << next_func << endl;
                             string offset = att_insts.substr(pos_2+3, pos_3-pos_2-3);
                             current_inst.offsetInst.second = offset;
-                            // cout << "offset: " << offset << endl;
 
                             // insert a true branch at the end of this instruction
                             string trueBr = " trueBr=" + offset;
                             insert_line += trueBr;
+                            vectorBranches.push_back(offset);
                         }
                     }
 
@@ -124,11 +127,11 @@ static void objdump2CFG(string fileName) {
                     cout << "instruction: ";
                     cout << current_inst.keyInst << " / " << current_inst.addressInst << " / " << current_inst.opcodesInst 
                          << " / " <<  current_inst.offsetInst.first << " / " << current_inst.offsetInst.second << endl;
+
+                    // write this line to the new objdump file
+                    ofs << blk_line << insert_line << endl;    
                 }
             }
-
-            // write this line to the new objdump file
-            ofs << insert_line << endl;
         }
         // TODO: only consider main function. Need to find all existed functions
         mapFuncInst.insert(make_pair("main", vectorInst)); 
@@ -142,6 +145,10 @@ static void objdump2CFG(string fileName) {
                      << " / " <<  vec_it->offsetInst.first << " / " << vec_it->offsetInst.second << endl;
             }
         }
+
+        // for (vector<string>::iterator vec_it=vectorBranches.begin(); vec_it!=vectorBranches.end(); ++vec_it) {
+        //     cout << *vec_it << endl;
+        // }
 
         // close file
         ifs.close();
