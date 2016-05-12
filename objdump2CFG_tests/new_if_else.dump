@@ -1,17 +1,39 @@
+
+
+
+
+
+
+
 ins 0:	55
+ins 0:	55
+ins 1:	48 89 e5
 ins 1:	48 89 e5
 ins 4:	c7 45 fc 00 00 00 00
 ins 4:	c7 45 fc 00 00 00 00
+ins 4:	c7 45 fc 00 00 00 00
+ins b:	81 7d f8 00 00 00 00
 ins b:	81 7d f8 00 00 00 00
 ins 12:	0f 8e 10 00 00 00
+ins 12:	0f 8e 10 00 00 00 trueBr=28
+ins 18:	8b 45 f8
 ins 18:	8b 45 f8
 ins 1b:	05 01 00 00 00
+ins 1b:	05 01 00 00 00
+ins 20:	89 45 f8
 ins 20:	89 45 f8
 ins 23:	e9 0b 00 00 00
+ins 23:	e9 0b 00 00 00 trueBr=33
+ins 28:	8b 45 f8
 ins 28:	8b 45 f8
 ins 2b:	05 ff ff ff ff
+ins 2b:	05 ff ff ff ff
+ins 30:	89 45 f8
 ins 30:	89 45 f8
 ins 33:	b8 00 00 00 00
+ins 33:	b8 00 00 00 00
 ins 38:	5d
+ins 38:	5d
+ins 39:	c3
 ins 39:	c3
 ins 39:	c3
