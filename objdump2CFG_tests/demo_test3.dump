@@ -1,0 +1,60 @@
+
+demo_test3.o:     file format elf32-i386
+
+
+Disassembly of section .text:
+
+00000000 <foo>:
+   0:	55                   	push   %ebp
+   1:	89 e5                	mov    %esp,%ebp
+   3:	50                   	push   %eax
+   4:	8b 45 08             	mov    0x8(%ebp),%eax
+   7:	89 45 fc             	mov    %eax,-0x4(%ebp)
+   a:	8b 45 fc             	mov    -0x4(%ebp),%eax
+   d:	05 01 00 00 00       	add    $0x1,%eax
+  12:	83 c4 04             	add    $0x4,%esp
+  15:	5d                   	pop    %ebp
+  16:	c3                   	ret    
+  17:	66 0f 1f 84 00 00 00 	nopw   0x0(%eax,%eax,1)
+  1e:	00 00 
+
+00000020 <demo3>:
+  20:	55                   	push   %ebp
+  21:	89 e5                	mov    %esp,%ebp
+  23:	83 ec 14             	sub    $0x14,%esp
+  26:	8b 45 0c             	mov    0xc(%ebp),%eax
+  29:	8b 4d 08             	mov    0x8(%ebp),%ecx
+  2c:	89 4d fc             	mov    %ecx,-0x4(%ebp)
+  2f:	89 45 f8             	mov    %eax,-0x8(%ebp)
+  32:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  35:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  38:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  3b:	89 45 f0             	mov    %eax,-0x10(%ebp)
+  3e:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  41:	8a 10                	mov    (%eax),%dl
+  43:	88 55 ef             	mov    %dl,-0x11(%ebp)
+  46:	0f be 45 ef          	movsbl -0x11(%ebp),%eax
+  4a:	3d 00 00 00 00       	cmp    $0x0,%eax
+  4f:	0f 84 45 00 00 00    	je     9a <demo3+0x7a>
+  55:	0f be 45 ef          	movsbl -0x11(%ebp),%eax
+  59:	3d 2f 00 00 00       	cmp    $0x2f,%eax
+  5e:	0f 85 0b 00 00 00    	jne    6f <demo3+0x4f>
+  64:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  67:	c6 00 5c             	movb   $0x5c,(%eax)
+  6a:	e9 08 00 00 00       	jmp    77 <demo3+0x57>
+  6f:	8a 45 ef             	mov    -0x11(%ebp),%al
+  72:	8b 4d f0             	mov    -0x10(%ebp),%ecx
+  75:	88 01                	mov    %al,(%ecx)
+  77:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  7a:	05 01 00 00 00       	add    $0x1,%eax
+  7f:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  82:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  85:	05 01 00 00 00       	add    $0x1,%eax
+  8a:	89 45 f0             	mov    %eax,-0x10(%ebp)
+  8d:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  90:	8a 08                	mov    (%eax),%cl
+  92:	88 4d ef             	mov    %cl,-0x11(%ebp)
+  95:	e9 ac ff ff ff       	jmp    46 <demo3+0x26>
+  9a:	83 c4 14             	add    $0x14,%esp
+  9d:	5d                   	pop    %ebp
+  9e:	c3                   	ret    
