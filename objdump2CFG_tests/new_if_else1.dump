@@ -1,0 +1,55 @@
+
+fun 0: entry=false
+blk 0:
+ins 0:	55
+ins 1:	48 89 e5
+ins 4:	89 7d fc
+ins 7:	89 75 f8
+ins a:	8b 45 f8
+ins d:	8b 55 fc
+ins 10:	01 d0
+ins 12:	5d
+ins 13:	c3
+fun 14 : entry=false
+blk 14 :
+ins 14:	55
+ins 15:	48 89 e5
+ins 18:	89 7d fc
+ins 1b:	89 75 f8
+ins 1e:	8b 45 f8
+ins 21:	8b 55 fc
+ins 24:	29 c2
+ins 26:	89 d0
+ins 28:	5d
+ins 29:	c3
+fun 2a : entry=true
+blk 2a :
+ins 2a:	55
+ins 2b:	48 89 e5
+ins 2e:	48 83 ec 10
+ins 32:	83 7d f8 00
+ins 36:	7e 14 trueBr=4c falseBr=38
+blk 38:
+ins 38:	8b 55 fc
+ins 3b:	8b 45 f8
+ins 3e:	89 d6
+ins 40:	89 c7
+ins 42:	e8 00 00 00 00 lclCall=47
+ins 47:	89 45 f4
+ins 4a:	eb 12 trueBr=5e
+blk 4c:
+ins 4c:	8b 55 fc
+ins 4f:	8b 45 f8
+ins 52:	89 d6
+ins 54:	89 c7
+ins 56:	e8 00 00 00 00 lclCall=5b
+ins 5b:	89 45 f4
+blk 5e:
+ins 5e:	8b 45 f4
+ins 61:	89 c6
+ins 63:	bf 00 00 00 00
+ins 68:	b8 00 00 00 00
+ins 6d:	e8 00 00 00 00 lclCall=72
+ins 72:	b8 00 00 00 00
+ins 77:	c9
+ins 78:	c3

@@ -1,3 +1,4 @@
+#include <stdio.h>
 int sum(int x, int y) {
     return x+y;
 }
@@ -13,5 +14,6 @@ int main() {
     } else {
         res = minus(a, b);
     }
+    printf("%d\n", res);
     return 0;
 }

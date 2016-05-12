@@ -18,6 +18,7 @@ static const string keywordsInsts[] =
     "add", "sub", "mul",
     "jmpq", "jmp",
     "cmpl", "jle",
+    "callq", "call",
     "retq", "ret", "leave", "leaveq"
 };
 
@@ -58,7 +59,6 @@ static inline int first_position(string str, const char c) {
     return pos;
 }
 
-
 static void objdump2CFG(string fileName, string root) {
     ifstream ifs(fileName);
     string newFileName = "new_" + fileName;
@@ -75,15 +75,19 @@ static void objdump2CFG(string fileName, string root) {
     if (ifs.is_open()) {
         while(getline(ifs, line)) {
             string::size_type pos_keyword = string::npos;
-            string::size_type pos_func = string::npos;
             string keyword, address, opcodes, next_func, att_insts, offset;
             string insert_line, blk_line = "", func_line = "", first_blk;
-            string func_addr, func_addr_not_zero;
+            string func_name, func_addr, func_addr_not_zero;
 
-            // find address of function
-            pos_func = line.find(root_str);
-            if (pos_func != string::npos) {
-                func_addr = line.substr(0, pos_func);
+            // find address of functions
+            // pos_func = line.find(root_str);
+            int pos_lt = first_position(line, '<');
+            int pos_gt = first_position(line, '>');
+            cout << line.substr(0, pos_lt-1) << endl;
+            if (pos_lt == 17) { // detect a new function
+                func_addr = line.substr(0, pos_lt);
+                func_name = line.substr(pos_lt+1, pos_gt-pos_lt-1);
+                cout << "func_name: " << func_name << endl;
                 // remove all '0' of function address
                 size_t pos_not_zero = func_addr.find_first_not_of("0");
                 if (pos_not_zero == func_addr.size()-1)
@@ -91,13 +95,16 @@ static void objdump2CFG(string fileName, string root) {
                 else
                     func_addr_not_zero = func_addr.substr(pos_not_zero, func_addr.size()-pos_not_zero);
                 cout << "func_addr_not_zero: " << func_addr_not_zero << endl;
-                func_line = "fun " + func_addr_not_zero + ": entry=true\n";
+                if (func_name == root)
+                    func_line = "\nfun " + func_addr_not_zero + ": entry=true\n";
+                else
+                    func_line = "\nfun " + func_addr_not_zero + ": entry=false\n";
                 first_blk = "blk " + func_addr_not_zero + ":";
                 ofs << func_line << first_blk;
             }
 
             int pos_colon = first_position(line, ':');
-            if (pos_colon >= 0) {
+            if (pos_colon == 4) { // detect an instruction
                 address = trim(line.substr(0, pos_colon));
 
                 // if address in vectorBranches, create a new basic block
@@ -115,7 +122,6 @@ static void objdump2CFG(string fileName, string root) {
                     insert_line = "ins " + trim(line.substr(0, pos_keyword-1)); // line.resize(pos_keyword);
 
                     opcodes = trim(insert_line.substr(pos_colon+3, pos_keyword-pos_colon-3));
-                    // cout << "opcodes: " << opcodes << endl;
                     att_insts = trim(line.substr(pos_keyword+keyword.size()+1, line.size()).c_str());
 
                     // update struct InfoInst of each instruction
@@ -123,32 +129,40 @@ static void objdump2CFG(string fileName, string root) {
                     vectorInst.push_back(current_inst);
 
                     // unconditional branch, for example: jmpq   33 <main+0x33>
-                    if (keyword == "jmpq" || keyword == "jmp" || keyword == "jle") {
+                    // call instruction, for example: callq  47 <main+0x1d>
+                    if (keyword == "jmpq" || keyword == "jmp" || keyword == "jle" || 
+                            keyword == "callq" || keyword == "call") {
                         int pos_1 = first_position(att_insts, '<');
                         int pos_2 = first_position(att_insts, '+');
                         int pos_3 = first_position(att_insts, '>');
+                        string next_addr, offset, trueBr;
                         if (pos_1 >= 0 && pos_2 >= 0) {
                             next_func = att_insts.substr(pos_1+1, pos_2-pos_1-1);
                             current_inst.nextAddrInst.first = next_func;
-                            string offset = att_insts.substr(pos_2+3, pos_3-pos_2-3);
-                            string next_addr = trim(att_insts.substr(0, pos_1));
-                            cout << "next_addr: " << next_addr << endl;
+                            offset = att_insts.substr(pos_2+3, pos_3-pos_2-3);
+                            next_addr = trim(att_insts.substr(0, pos_1));
                             current_inst.nextAddrInst.second = next_addr;
 
-                            // insert a true branch at the end of this instruction
-                            string trueBr = " trueBr=" + next_addr;
-                            current_inst.printInst += trueBr;
-                            vectorBranches.push_back(next_addr);
+                            if (keyword != "callq" && keyword != "call") {
+                                // insert a true branch at the end of this instruction
+                                trueBr = " trueBr=" + next_addr;
+                                current_inst.printInst += trueBr;
+                                vectorBranches.push_back(next_addr);
+                            } else {
+                                current_inst.printInst += " lclCall="+next_addr;
+                            }
                         }
                     }
 
-                    // conditional branch
+                    // conditional branch, for example: jle    25 <main+0x25>
                     if (vectorInst.size() >= 2 && vectorInst.at(vectorInst.size()-2).keyInst == "jle") {
                         string falseBr = " falseBr=" + address;
                         vectorInst.at(vectorInst.size()-2).printInst += falseBr;
                         vectorBranches.push_back(address);
                         ofs << falseBr << "\nblk " << current_inst.addressInst << ":";
                     }
+
+                    // TODO: consider external call
 
                     // for (vector<InfoInst>::iterator vec_it=vectorInst.begin(); vec_it!=vectorInst.end(); ++vec_it) {
                     //     cout << "instruction: ";
@@ -157,10 +171,10 @@ static void objdump2CFG(string fileName, string root) {
                     // }
 
                     // print infos of the current instruction                   
-                    cout << "instruction: ";
-                    cout << current_inst.keyInst << " / " << current_inst.addressInst << " / " << current_inst.opcodesInst
-                         << " / " <<  current_inst.nextAddrInst.first << " / " << current_inst.nextAddrInst.second << endl;
-                    cout << "=> " << current_inst.printInst << endl;
+                    // cout << "instruction: ";
+                    // cout << current_inst.keyInst << " / " << current_inst.addressInst << " / " << current_inst.opcodesInst
+                    //      << " / " <<  current_inst.nextAddrInst.first << " / " << current_inst.nextAddrInst.second << endl;
+                    // cout << "=> " << current_inst.printInst << endl;
 
                     // write this line to the new objdump file
                     ofs << "\n" << func_line << blk_line << current_inst.printInst;   
@@ -172,7 +186,7 @@ static void objdump2CFG(string fileName, string root) {
 
         // print all instructions which belongs to a function
         for (map<string, vector<InfoInst>>::iterator map_it=mapFuncInst.begin(); map_it!=mapFuncInst.end(); ++map_it) {
-            cout << map_it->first << endl;
+            cout << "FUNCTION: " << map_it->first << endl;
             for (vector<InfoInst>::iterator vec_it=map_it->second.begin(); vec_it!=map_it->second.end(); ++vec_it) {
                 cout << "instruction: ";
                 cout << vec_it->keyInst << " / " << vec_it->addressInst << " / " << vec_it->opcodesInst

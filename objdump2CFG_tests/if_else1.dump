@@ -31,21 +31,26 @@ Disassembly of section .text:
   2a:	55                   	push   %rbp
   2b:	48 89 e5             	mov    %rsp,%rbp
   2e:	48 83 ec 10          	sub    $0x10,%rsp
-  32:	83 7d f4 00          	cmpl   $0x0,-0xc(%rbp)
+  32:	83 7d f8 00          	cmpl   $0x0,-0x8(%rbp)
   36:	7e 14                	jle    4c <main+0x22>
-  38:	8b 55 f8             	mov    -0x8(%rbp),%edx
-  3b:	8b 45 f4             	mov    -0xc(%rbp),%eax
+  38:	8b 55 fc             	mov    -0x4(%rbp),%edx
+  3b:	8b 45 f8             	mov    -0x8(%rbp),%eax
   3e:	89 d6                	mov    %edx,%esi
   40:	89 c7                	mov    %eax,%edi
   42:	e8 00 00 00 00       	callq  47 <main+0x1d>
-  47:	89 45 fc             	mov    %eax,-0x4(%rbp)
+  47:	89 45 f4             	mov    %eax,-0xc(%rbp)
   4a:	eb 12                	jmp    5e <main+0x34>
-  4c:	8b 55 f8             	mov    -0x8(%rbp),%edx
-  4f:	8b 45 f4             	mov    -0xc(%rbp),%eax
+  4c:	8b 55 fc             	mov    -0x4(%rbp),%edx
+  4f:	8b 45 f8             	mov    -0x8(%rbp),%eax
   52:	89 d6                	mov    %edx,%esi
   54:	89 c7                	mov    %eax,%edi
   56:	e8 00 00 00 00       	callq  5b <main+0x31>
-  5b:	89 45 fc             	mov    %eax,-0x4(%rbp)
-  5e:	b8 00 00 00 00       	mov    $0x0,%eax
-  63:	c9                   	leaveq 
-  64:	c3                   	retq   
+  5b:	89 45 f4             	mov    %eax,-0xc(%rbp)
+  5e:	8b 45 f4             	mov    -0xc(%rbp),%eax
+  61:	89 c6                	mov    %eax,%esi
+  63:	bf 00 00 00 00       	mov    $0x0,%edi
+  68:	b8 00 00 00 00       	mov    $0x0,%eax
+  6d:	e8 00 00 00 00       	callq  72 <main+0x48>
+  72:	b8 00 00 00 00       	mov    $0x0,%eax
+  77:	c9                   	leaveq 
+  78:	c3                   	retq   
