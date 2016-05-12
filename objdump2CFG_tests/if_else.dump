@@ -1,5 +1,5 @@
 
-test.o:     file format elf64-x86-64
+if_else.o:     file format elf64-x86-64
 
 
 Disassembly of section .text:
@@ -8,15 +8,16 @@ Disassembly of section .text:
    0:	55                   	push   %rbp
    1:	48 89 e5             	mov    %rsp,%rbp
    4:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%rbp)
-   b:	81 7d f8 00 00 00 00 	cmpl   $0x0,-0x8(%rbp)
-  12:	0f 8e 10 00 00 00    	jle    28 <main+0x28>
-  18:	8b 45 f8             	mov    -0x8(%rbp),%eax
-  1b:	05 01 00 00 00       	add    $0x1,%eax
-  20:	89 45 f8             	mov    %eax,-0x8(%rbp)
-  23:	e9 0b 00 00 00       	jmpq   33 <main+0x33>
-  28:	8b 45 f8             	mov    -0x8(%rbp),%eax
-  2b:	05 ff ff ff ff       	add    $0xffffffff,%eax
-  30:	89 45 f8             	mov    %eax,-0x8(%rbp)
-  33:	b8 00 00 00 00       	mov    $0x0,%eax
-  38:	5d                   	pop    %rbp
-  39:	c3                   	retq   
+   b:	8b 45 f8             	mov    -0x8(%rbp),%eax
+   e:	3b 45 f4             	cmp    -0xc(%rbp),%eax
+  11:	0f 8e 0e 00 00 00    	jle    25 <main+0x25>
+  17:	8b 45 f8             	mov    -0x8(%rbp),%eax
+  1a:	03 45 f4             	add    -0xc(%rbp),%eax
+  1d:	89 45 f0             	mov    %eax,-0x10(%rbp)
+  20:	e9 09 00 00 00       	jmpq   2e <main+0x2e>
+  25:	8b 45 f8             	mov    -0x8(%rbp),%eax
+  28:	2b 45 f4             	sub    -0xc(%rbp),%eax
+  2b:	89 45 f0             	mov    %eax,-0x10(%rbp)
+  2e:	b8 00 00 00 00       	mov    $0x0,%eax
+  33:	5d                   	pop    %rbp
+  34:	c3                   	retq   

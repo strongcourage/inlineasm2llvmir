@@ -1,9 +1,9 @@
 int main() {
-	int a;
-	if (a > 0) {
-		a++;
+	int a, b, ret;
+	if (a > b) {
+		ret = a+b;
 	} else {
-		a--;
+		ret = a-b;
 	}
 	return 0;
 }
