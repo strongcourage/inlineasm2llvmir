@@ -14,12 +14,14 @@ using namespace std;
 static const string keywordsInsts[] =
 {
     "push", "pop",
-    "movl", "mov", "lea",
-    "add", "sub", "mul",
-    "jmpq", "jmp",
-    "cmpl", "jle",
-    "callq", "call",
-    "retq", "ret", "leave", "leaveq"
+    "movl", "mov", "moq", "lea", "leaq",
+    "add", "sub", "mul", "addq", "subq", "mulq",// arithmetic instructions
+    "cmpl", "cmp", // comparison instructions
+    "jmpq", "jmp",  // arithmetic instructions
+    "je", "jne", "jl", "jnge", "jle", "jng", "jg", "jnle", "jge", "jnl",   // conditional branch instructions
+    "callq", "call", // call instructions
+    "loop", "loope", "loopz", "loopne", "loopnz", // loop instructions
+    "retq", "ret", "leave", "leaveq" // ret instructions
 };
 
 struct InfoInst {
