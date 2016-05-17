@@ -1,30 +1,30 @@
 # Generate bitcode and llvm file
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ clang-3.5 -emit-llvm -S -O2 test.c -o test.ll
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ llvm-as test.ll -o=test.bc
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ clang-3.5 -emit-llvm -S -O2 test.c -o test.ll; subl test.ll
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ llvm-as test.ll -o=test.bc
 
 # Build and run ExtractInlineAsm LLVM Pass
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/ExtractInlineAsm$ make clean; make; cp ~/mcsema/llvm-3.5/Release+Asserts/lib/ExtractInlineAsm.so ~/mcsema/build/llvm-3.5/lib/
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/ExtractInlineAsm$ make clean; make; cp ~/mcsema/llvm-3.5/Release+Asserts/lib/ExtractInlineAsm.so ~/mcsema/build/llvm-3.5/lib/
 
 # Generate two new llvm file from the original one
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ rm -rf test1.bc test1.ll; clang-3.5 -emit-llvm -c test.c -o test.bc; opt -load ExtractInlineAsm.so -O2 -extractinlineasm test.bc > test1.bc; llvm-dis -o=test1.ll test1.bc; subl test1.ll
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ llvm-dis inline_asm.bc -o=inline_asm.ll
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ rm -rf test1.bc test1.ll; clang-3.5 -emit-llvm -c test.c -o test.bc; opt -load ExtractInlineAsm.so -O2 -extractinlineasm test.bc > test1.bc; llvm-dis -o=test1.ll test1.bc; subl test1.ll
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ llvm-dis inline_asm.bc -o=inline_asm.ll; subl inline_asm.ll
 
 # Build and generate a CFG in new format
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms$ clang++-3.5 -std=c++11 objdump2CFG.cpp -o objdump2CFG -I../../include
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ clang-3.5 -c inline_asm.ll -O2
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ rm -rf inline_asm; objdump -d inline_asm.o > inline_asm.dump
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ rm -rf new_inline_asm.dump; ../objdump2CFG inline_asm.dump inline_asm; mv new_inline_asm.dump inline_asm.cfg
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir$ clang++-3.5 -std=c++11 objdump2CFG.cpp -o objdump2CFG -I../../include
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ clang-3.5 -c inline_asm.ll -O2
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ rm -rf inline_asm; objdump -d inline_asm.o > inline_asm.dump; subl inline_asm.dump
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ rm -rf new_inline_asm.dump; ../objdump2CFG inline_asm.dump inline_asm; mv new_inline_asm.dump inline_asm.cfg; subl inline_asm.cfg
 
 # Use the new lifter to generate lifted function in llvm
-dungnguyen@tsunami:~/squirrel/squirrel-x86_64$ cp ~/mcsema/llvm-3.5/lib/Transforms/test/inline_asm.cfg .
-dungnguyen@tsunami:~/squirrel/squirrel-x86_64$ ./lift inline_asm.cfg; cp ./lift_result.ll ~/mcsema/llvm-3.5/lib/Transforms/test; subl lift_result.ll
-dungnguyen@tsunami:~/squirrel/squirrel-x86_64$ opt-3.5 -S -O2 lift_result.ll > lifted_inline_asm.ll; cp ./lifted_inline_asm.ll ~/mcsema/llvm-3.5/lib/Transforms/test; subl lifted_inline_asm.ll
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ llvm-as lifted_inline_asm.ll -o=lifted_inline_asm.bc
+dungnguyen@tsunami:~/squirrel/squirrel-x86_64$ cp ~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test/inline_asm.cfg .
+dungnguyen@tsunami:~/squirrel/squirrel-x86_64$ ./lift inline_asm.cfg; cp ./lift_result.ll ~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test; subl lift_result.ll
+dungnguyen@tsunami:~/squirrel/squirrel-x86_64$ opt-3.5 -S -O2 lift_result.ll > lifted_inline_asm.ll; cp ./lifted_inline_asm.ll ~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test; subl lifted_inline_asm.ll
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ llvm-as lifted_inline_asm.ll -o=lifted_inline_asm.bc
 
 # Link two bitcode files
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ llvm-link -o=merge.bc lifted_inline_asm.bc test1.bc
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ llvm-dis merge.bc -o=merge.ll; subl merge.ll
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ llvm-link -o=merge.bc lifted_inline_asm.bc test1.bc
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ llvm-dis merge.bc -o=merge.ll; subl merge.ll
 
 # Build and run DoPostProcessing LLVM Pass
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/DoPostProcessing$ make clean; make; cp ~/mcsema/llvm-3.5/Release+Asserts/lib/DoPostProcessing.so ~/mcsema/build/llvm-3.5/lib/
-dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/Transforms/test$ rm -rf final_merge.ll final_merge.bc; opt -load DoPostProcessing.so -O2 -dopostprocessing merge.bc > final_merge.bc; llvm-dis -o=final_merge.ll final_merge.bc; subl final_merge.ll
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/DoPostProcessing$ make clean; make; cp ~/mcsema/llvm-3.5/Release+Asserts/lib/DoPostProcessing.so ~/mcsema/build/llvm-3.5/lib/
+dungnguyen@tsunami:~/mcsema/llvm-3.5/lib/inlineasm2llvmir/test$ rm -rf final_merge.ll final_merge.bc; opt -load DoPostProcessing.so -O2 -dopostprocessing merge.bc > final_merge.bc; llvm-dis -o=final_merge.ll final_merge.bc; subl final_merge.ll

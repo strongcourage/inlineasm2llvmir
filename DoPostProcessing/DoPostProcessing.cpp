@@ -1,4 +1,4 @@
-//===- InlineAsm.cpp - Example code from "Writing an LLVM Pass" ---------------===//
+//===- DoPostProcessing.cpp - LLVM Pass -----------------------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -7,8 +7,6 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file implements two versions of the LLVM "Hello World" pass described
-// in docs/WritingAnLLVMPass.html
 //
 //===----------------------------------------------------------------------===//
 
@@ -53,8 +51,8 @@ struct DoPostProcessing : public ModulePass {
                         Function *funcCall = dyn_cast<CallInst>(ci)->getCalledFunction();
                         if (funcCall) {
                             // errs() << "call function: " << funcCall->getName(); 
-                            if (funcCall->getName().find("lifted_inline_asm") != std::string::npos) {
-                                errs() << "Find @lifted_inline_asm: " << *ci << "\n";
+                            if (funcCall->getName().find("inline_asm") != std::string::npos) {
+                                errs() << "Find @inline_asm: " << *ci << "\n";
                                 std::vector<Value*> lifted_params;
                                 Value *param0 = ci->getArgOperand(0);
                                 Value *param1 = ci->getArgOperand(1);
