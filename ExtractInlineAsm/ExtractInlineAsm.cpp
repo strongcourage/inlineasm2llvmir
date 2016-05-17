@@ -1,4 +1,4 @@
-//===- InlineAsm.cpp - Example code from "Writing an LLVM Pass" ---------------===//
+//===- ExtractInlineAsm.cpp - LLVM Transform Pass  ------------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -7,8 +7,6 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file implements two versions of the LLVM "Hello World" pass described
-// in docs/WritingAnLLVMPass.html
 //
 //===----------------------------------------------------------------------===//
 
@@ -100,13 +98,13 @@ struct ExtractInlineAsm : public ModulePass {
                             // insert a lifted inline asm function, just a function declaration (extern)
                             FunctionType *functype_declareCall = FunctionType::get(IntegerType::get(m_context, 64), lifted_type_params, false); 
                             // “external linkage” means that the function may be defined outside the current module and/or that it is callable by functions outside the module
-                            Function *func_declareCall = Function::Create(functype_declareCall, Function::ExternalLinkage, "lifted_inline_asm", &mod);
+                            Function *func_declareCall = Function::Create(functype_declareCall, Function::ExternalLinkage, "inline_asm", &mod);
 
                             // create a new module, which contains the definition of the lifted inline asm function
-                            Module* newMod = new Module("lifted_inline_asm", getGlobalContext());
+                            Module* newMod = new Module("inline_asm", getGlobalContext());
                             // TODO: replace IntegerType::get(m_context, 64) by Type* of return value of inline asm function
                             FunctionType *functype_extractCall = FunctionType::get(IntegerType::get(m_context, 64), lifted_type_params, false); 
-                            Function *func_extractCall = Function::Create(functype_extractCall, Function::ExternalLinkage, "lifted_inline_asm", newMod);
+                            Function *func_extractCall = Function::Create(functype_extractCall, Function::ExternalLinkage, "inline_asm", newMod);
                             errs() << "number of args: " << func_extractCall->arg_size() << "\n";
                             vector<Value*> args;
                             // for(Function::arg_iterator ai = func_extractCall->arg_begin(), ae = func_extractCall->arg_end(); ai != ae; ++ai) {
@@ -132,7 +130,7 @@ struct ExtractInlineAsm : public ModulePass {
                             errs() << "extracted function definition: " << *func_extractCall << "\n";
                             errs() << "new module: " << *newMod << "\n";
                             // output new module to file
-                            raw_ostream *out = new raw_fd_ostream("lifted_inline_asm.bc", errorMessage, sys::fs::F_None);
+                            raw_ostream *out = new raw_fd_ostream("inline_asm.bc", errorMessage, sys::fs::F_None);
                             llvm::WriteBitcodeToFile(newMod, *out);
                             out->flush();
                             delete out;

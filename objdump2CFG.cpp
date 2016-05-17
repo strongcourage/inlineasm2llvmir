@@ -17,7 +17,7 @@ static const string keywordsInsts[] =
     "movl", "mov", "moq", "lea", "leaq",
     "add", "sub", "mul", "addq", "subq", "mulq",// arithmetic instructions
     "cmpl", "cmp", // comparison instructions
-    "jmpq", "jmp",  // arithmetic instructions
+    "jmpq", "jmp",  // unconditional branch instructions
     "je", "jne", "jl", "jnge", "jle", "jng", "jg", "jnle", "jge", "jnl",   // conditional branch instructions
     "callq", "call", // call instructions
     "loop", "loope", "loopz", "loopne", "loopnz", // loop instructions
