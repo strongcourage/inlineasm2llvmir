@@ -33,55 +33,21 @@ struct DoPostProcessing : public ModulePass {
     DoPostProcessing() : ModulePass(ID) {}
 
     virtual bool runOnModule(Module &mod) {
-        LLVMContext& m_context = getGlobalContext();
-        Function *lift = nullptr;
+        Function *lifted_func = nullptr;
         for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
             if (fi->getName().find("_x86_64_lifted_function") != std::string::npos) {
                 errs() << "lifted_function: " << *fi << "\n";
-                lift = fi;
+                lifted_func = fi;
             }
         }
 
-        for(Module::iterator fi = mod.begin(), fe = mod.end(); fi != fe; ++fi) {
-            for(Function::iterator bb = fi->begin(), be = fi->end(); bb != be; ++bb) {
-                for(BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
-                    if (isa<CallInst>(i)) {
-                        // errs() << "lifted_inline_asm function: " << *i << "\n";
-                        CallInst *ci = dyn_cast<CallInst>(i);
-                        Function *funcCall = dyn_cast<CallInst>(ci)->getCalledFunction();
-                        if (funcCall) {
-                            // errs() << "call function: " << funcCall->getName(); 
-                            if (funcCall->getName().find("inline_asm") != std::string::npos) {
-                                errs() << "Find @inline_asm: " << *ci << "\n";
-                                std::vector<Value*> lifted_params;
-                                Value *param0 = ci->getArgOperand(0);
-                                Value *param1 = ci->getArgOperand(1);
-                                Value *param2 = ci->getArgOperand(2);
-                                Value *param3 = ci->getArgOperand(3);
-                                Value *param4 = ci->getArgOperand(4);
-                                Value *param5 = ci->getArgOperand(5);
-                                lifted_params.push_back(param0);
-                                lifted_params.push_back(param1);
-                                lifted_params.push_back(param2);
-                                lifted_params.push_back(param3);
-                                lifted_params.push_back(param4);
-                                lifted_params.push_back(param5);
-                                
-                                BasicBlock::iterator ii(ci);
-                                errs() << "name: " << ci->getName() << "\n";
-                                CallInst *newLiftedFunc = CallInst::Create(lift, lifted_params, "zzz");
-                                errs() << "newLiftedFunc:" << *newLiftedFunc << "\n";
-                                ReplaceInstWithInst(bb->getInstList(), ii, newLiftedFunc);
-                                // Function *funcCall = dyn_cast<CallInst>(i)->getCalledFunction();
-                                // if (funcCall->getName().find("dung") != std::string::npos) {
-                                //     errs() << "manh_dung: " << *funcCall << "\n";
-                                // }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        Function *inline_asm_func = mod.getFunction("inline_asm");
+	    if (inline_asm_func != nullptr) {
+	    	errs() << "Inline asm function: " << *inline_asm_func << "\n";
+	    	inline_asm_func->replaceAllUsesWith(lifted_func);
+	    	// delete the declaration of the inline asm function
+	    	inline_asm_func->eraseFromParent();
+	    }
 
         return true;
     }   
